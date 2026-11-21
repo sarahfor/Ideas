@@ -59,14 +59,17 @@ export default function Workspace() {
     catch { setLoadState("error"); setLoadError("Browser notes are unavailable. Saved data has been left unchanged. You can still read the published notes."); }
   }
   useEffect(()=>{
-    if (window.matchMedia("(max-width:800px)").matches) setAssistant(false);
+    const narrowWindow=window.matchMedia("(max-width:800px)");
+    const closeOnNarrowWindow=()=>{if(narrowWindow.matches)setAssistant(false);};
+    closeOnNarrowWindow();
+    narrowWindow.addEventListener("change",closeOnNarrowWindow);
     const requested=new URLSearchParams(location.search).get("note");
     if(requested)setSelected(requested);
     loadNotes();
     const pop=()=>{setSelected(new URLSearchParams(location.search).get("note")||"hot-cold");setTab("note");};
     const storageChanged = (event: StorageEvent) => { if (event.key === storageKey || event.key === null) loadNotes(); };
     window.addEventListener("popstate",pop);window.addEventListener("storage",storageChanged);
-    return()=>{window.removeEventListener("popstate",pop);window.removeEventListener("storage",storageChanged);};
+    return()=>{window.removeEventListener("popstate",pop);window.removeEventListener("storage",storageChanged);narrowWindow.removeEventListener("change",closeOnNarrowWindow);};
   },[]);
   useEffect(()=>{setPrompt("");setCopied(false);},[selected]);
   useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(""),3500);return()=>clearTimeout(t);},[notice]);
